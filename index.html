@@ -1,0 +1,618 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⏳ GlowDo · tasks + reminders</title>
+  <!-- Font Awesome & Google Font -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    body {
+      background: linear-gradient(145deg, #f5edff 0%, #e6d9ff 100%);
+      min-height: 100vh;
+      padding: 1.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .app-wrapper {
+      max-width: 1200px;
+      width: 100%;
+      background: rgba(255, 250, 255, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-radius: 2.8rem;
+      padding: 2rem 2rem 2.2rem;
+      box-shadow: 0 30px 60px rgba(100, 60, 180, 0.15);
+      border: 1px solid rgba(255,255,255,0.5);
+    }
+    /* header */
+    .greeting-quote {
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline;
+      margin-bottom: 1.5rem;
+    }
+    .user-greeting h2 {
+      font-weight: 700; font-size: 2rem;
+      background: linear-gradient(135deg, #45207a, #9a5fd9);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.3px;
+    }
+    .user-greeting h2 i { -webkit-text-fill-color: initial; color: #a77bdb; margin-right: 0.5rem; }
+    .quote-box {
+      background: rgba(255,255,255,0.5); padding: 0.4rem 1.6rem; border-radius: 60px;
+      border: 1px solid #d7c4f5; backdrop-filter: blur(4px);
+      font-weight: 500; color: #31204a; display: flex; align-items: center; gap: 0.6rem;
+    }
+    .quote-box i { color: #8f62cc; }
+    /* sections tabs */
+    .section-tabs {
+      display: flex; gap: 0.6rem; margin: 1.2rem 0 1.5rem; flex-wrap: wrap;
+    }
+    .section-btn {
+      background: rgba(225, 210, 250, 0.5); border: none; padding: 0.45rem 1.6rem;
+      border-radius: 40px; font-weight: 600; font-size: 0.9rem; color: #352350;
+      cursor: pointer; transition: 0.2s; backdrop-filter: blur(4px);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .section-btn.active { background: #7b4bbd; color: white; box-shadow: 0 6px 14px #a67ae0; }
+    /* task grid */
+    .task-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+      margin-bottom: 2.2rem;
+    }
+    .task-col {
+      background: rgba(255,255,255,0.45); backdrop-filter: blur(6px);
+      border-radius: 1.8rem; padding: 1.2rem 1rem 1rem;
+      border: 1px solid rgba(255,255,255,0.7); min-height: 220px;
+    }
+    .col-header {
+      display: flex; align-items: center; gap: 0.5rem;
+      font-weight: 700; font-size: 1.1rem; color: #281b3d;
+      border-bottom: 2px dashed #d6c2f2; padding-bottom: 0.5rem; margin-bottom: 0.8rem;
+    }
+    .col-header i { color: #7b4bbd; }
+    .task-list { list-style: none; padding: 0; margin: 0 0 0.6rem; }
+    .task-item {
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(255,255,255,0.6); padding: 0.4rem 0.6rem 0.4rem 0.5rem;
+      margin-bottom: 0.4rem; border-radius: 60px; border: 1px solid #eee5ff;
+      transition: 0.1s;
+    }
+    .task-item:hover { background: white; border-color: #bb9ee8; }
+    .task-item input[type="checkbox"] {
+      appearance: none; width: 20px; height: 20px; border-radius: 50%;
+      border: 2px solid #b18bdd; cursor: pointer; transition: 0.15s;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .task-item input[type="checkbox"]:checked {
+      background: #7b4bbd; border-color: #7b4bbd; position: relative;
+    }
+    .task-item input[type="checkbox"]:checked::after {
+      content: "✓"; color: white; font-size: 14px; font-weight: 700;
+    }
+    .task-text { flex: 1; font-size: 0.9rem; font-weight: 500; color: #1d142b; word-break: break-word; }
+    .task-item.completed .task-text { text-decoration: line-through; color: #9381b3; }
+    .task-actions { display: flex; gap: 0.2rem; }
+    .task-actions button { background: transparent; border: none; color: #7b61a3; cursor: pointer; font-size: 0.8rem; padding: 0 0.2rem; }
+    .task-actions .edit-btn { color: #5f4890; }
+    .task-actions .delete-btn { color: #bc7e9e; }
+    .task-actions button:hover { transform: scale(1.15); }
+    .add-task-form { display: flex; gap: 0.3rem; margin-top: 0.4rem; }
+    .add-task-form input {
+      flex: 1; border: 1px solid #d4c0f0; border-radius: 40px; padding: 0.5rem 1rem;
+      background: rgba(255,255,255,0.6); font-weight: 500; outline: none; font-size: 0.8rem;
+    }
+    .add-task-form input:focus { border-color: #9165d0; background: white; box-shadow: 0 0 0 3px rgba(123,75,189,0.15); }
+    .add-task-form button {
+      background: #7b4bbd; border: none; color: white; border-radius: 40px;
+      padding: 0 1.2rem; font-weight: 700; cursor: pointer; transition: 0.15s;
+      box-shadow: 0 4px 10px rgba(123,75,189,0.25);
+    }
+    .add-task-form button:hover { background: #925fd9; transform: scale(0.96); }
+    .progress-text { font-size: 0.75rem; color: #5a417a; margin-top: 4px; }
+    .pop-complete { background: #42b983; color: white; padding: 0.15rem 1rem; border-radius: 40px; font-weight: 600; animation: pop 0.3s; display: inline-block; }
+    @keyframes pop { 0% { transform: scale(0.7); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+
+    /* REMINDER SECTION - enhanced */
+    .reminder-main {
+      margin-top: 1.5rem;
+      background: rgba(225, 210, 250, 0.3);
+      backdrop-filter: blur(6px);
+      border-radius: 2rem;
+      padding: 1.2rem 1.8rem 1.8rem;
+      border: 1px solid rgba(255,255,255,0.6);
+    }
+    .reminder-header {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-weight: 700; color: #2e194b; margin-bottom: 1rem;
+    }
+    .reminder-header i { color: #ca3e6b; font-size: 1.3rem; }
+    .reminder-flex {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem;
+      margin-bottom: 1.2rem;
+    }
+    .reminder-flex input, .reminder-flex select {
+      padding: 0.5rem 1rem; border-radius: 40px; border: 1px solid #d4bff2;
+      background: rgba(255,255,255,0.6); font-weight: 500; outline: none; flex: 1 1 140px;
+    }
+    .reminder-flex button {
+      background: #ca3e6b; border: none; color: white; padding: 0.5rem 1.8rem;
+      border-radius: 60px; font-weight: 700; cursor: pointer; transition: 0.15s;
+      box-shadow: 0 4px 12px rgba(202,62,107,0.25);
+    }
+    .reminder-flex button:hover { background: #db4f7c; transform: scale(0.96); }
+    /* reminder list (multiple boxes) */
+    .reminder-list-box {
+      display: flex; flex-direction: column; gap: 0.6rem;
+      margin-top: 0.6rem;
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 0.3rem;
+    }
+    .reminder-card {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(4px);
+      border-radius: 60px;
+      padding: 0.6rem 1.2rem 0.6rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      border-left: 8px solid #ca3e6b;
+      border: 1px solid #f0e6ff;
+      transition: 0.15s;
+    }
+    .reminder-card:hover { background: white; }
+    .reminder-card .rem-info {
+      flex: 1;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.3rem 0.8rem;
+    }
+    .reminder-card .rem-text { font-weight: 600; color: #1f0f33; }
+    .reminder-card .rem-time { font-size: 0.8rem; color: #5b407a; background: #ede4ff; padding: 0.1rem 0.8rem; border-radius: 40px; }
+    .reminder-card .rem-actions {
+      display: flex; gap: 0.4rem;
+    }
+    .reminder-card .rem-actions button {
+      background: transparent; border: none; color: #6b4b8f; cursor: pointer; font-size: 0.9rem;
+      padding: 0 0.2rem;
+    }
+    .reminder-card .rem-actions .rem-edit { color: #5f4890; }
+    .reminder-card .rem-actions .rem-delete { color: #bc7e9e; }
+    .reminder-card .rem-actions button:hover { transform: scale(1.2); }
+    .reminder-card .rem-status {
+      font-size: 0.7rem; background: #9f7cdb; color: white; padding: 0.1rem 0.8rem; border-radius: 40px;
+      white-space: nowrap;
+    }
+    .reminder-card.triggered { border-left-color: #42b983; background: #e2ffe8; }
+    .reminder-card.triggered .rem-status { background: #42b983; }
+    .no-reminder { color: #5a417a; font-style: italic; padding: 0.4rem 0; }
+
+    /* celebration badge */
+    .celebration-badge {
+      background: #ffd966; color: #2f1d47; padding: 0.3rem 1.4rem;
+      border-radius: 60px; font-weight: 700; position: fixed; bottom: 25px; right: 25px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1); z-index: 999;
+    }
+
+    @media (max-width: 750px) { .task-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="app-wrapper" id="app">
+  <!-- greeting + quote -->
+  <div class="greeting-quote">
+    <div class="user-greeting">
+      <h2><i class="fas fa-star"></i> Hello, <span id="userNameDisplay">Luna</span> ✦</h2>
+    </div>
+    <div class="quote-box">
+      <i class="fas fa-quote-left"></i> <span id="dailyQuote">“Organize your day, own your life.”</span>
+    </div>
+  </div>
+
+  <!-- section tabs -->
+  <div class="section-tabs">
+    <button class="section-btn active" data-section="morning"><i class="fas fa-cloud-sun"></i> Morning</button>
+    <button class="section-btn" data-section="afternoon"><i class="fas fa-sun"></i> Afternoon</button>
+    <button class="section-btn" data-section="evening"><i class="fas fa-moon"></i> Evening</button>
+  </div>
+
+  <!-- 3 columns -->
+  <div class="task-grid" id="taskGrid">
+    <div class="task-col" data-section="morning">
+      <div class="col-header"><i class="fas fa-cloud-sun"></i> Morning</div>
+      <ul class="task-list" id="taskListMorning"></ul>
+      <div class="add-task-form">
+        <input type="text" placeholder="write task..." id="inputMorning">
+        <button data-section="morning"><i class="fas fa-plus"></i></button>
+      </div>
+      <div class="progress-text" id="progressMorning"></div>
+    </div>
+    <div class="task-col" data-section="afternoon">
+      <div class="col-header"><i class="fas fa-sun"></i> Afternoon</div>
+      <ul class="task-list" id="taskListAfternoon"></ul>
+      <div class="add-task-form">
+        <input type="text" placeholder="write task..." id="inputAfternoon">
+        <button data-section="afternoon"><i class="fas fa-plus"></i></button>
+      </div>
+      <div class="progress-text" id="progressAfternoon"></div>
+    </div>
+    <div class="task-col" data-section="evening">
+      <div class="col-header"><i class="fas fa-moon"></i> Evening</div>
+      <ul class="task-list" id="taskListEvening"></ul>
+      <div class="add-task-form">
+        <input type="text" placeholder="write task..." id="inputEvening">
+        <button data-section="evening"><i class="fas fa-plus"></i></button>
+      </div>
+      <div class="progress-text" id="progressEvening"></div>
+    </div>
+  </div>
+
+  <!-- REMINDER SECTION with multiple boxes -->
+  <div class="reminder-main">
+    <div class="reminder-header"><i class="fas fa-bell"></i> ⏰ Important reminders (multiple)</div>
+    <div class="reminder-flex">
+      <input type="text" id="reminderText" placeholder="Meeting, call, deadline...">
+      <input type="datetime-local" id="reminderDateTime">
+      <button id="addReminderBtn"><i class="fas fa-plus-circle"></i> Add</button>
+      <button id="testRingBtn" style="background:#6c4b9b;"><i class="fas fa-volume-up"></i> Test ring</button>
+    </div>
+    <!-- list of reminders -->
+    <div class="reminder-list-box" id="reminderListContainer">
+      <div class="no-reminder" id="noReminderMsg">📭 No reminders yet. Add one above.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    // ----- state -----
+    const sections = ['morning','afternoon','evening'];
+    let tasks = { morning: [], afternoon: [], evening: [] };
+    let reminders = []; // [{ id, text, time, triggered }]
+    let reminderInterval = null;
+    let reminderIdCounter = 0;
+
+    // DOM refs
+    const lists = {
+      morning: document.getElementById('taskListMorning'),
+      afternoon: document.getElementById('taskListAfternoon'),
+      evening: document.getElementById('taskListEvening')
+    };
+    const inputs = {
+      morning: document.getElementById('inputMorning'),
+      afternoon: document.getElementById('inputAfternoon'),
+      evening: document.getElementById('inputEvening')
+    };
+    const progress = {
+      morning: document.getElementById('progressMorning'),
+      afternoon: document.getElementById('progressAfternoon'),
+      evening: document.getElementById('progressEvening')
+    };
+    const userNameSpan = document.getElementById('userNameDisplay');
+    const quoteSpan = document.getElementById('dailyQuote');
+    const reminderContainer = document.getElementById('reminderListContainer');
+    const noReminderMsg = document.getElementById('noReminderMsg');
+
+    // ----- helpers -----
+    function saveToStorage() {
+      localStorage.setItem('glowdo_tasks_v2', JSON.stringify(tasks));
+      localStorage.setItem('glowdo_reminders_v2', JSON.stringify(reminders));
+      localStorage.setItem('glowdo_username_v2', userNameSpan.textContent);
+    }
+    function loadFromStorage() {
+      const t = localStorage.getItem('glowdo_tasks_v2');
+      if (t) tasks = JSON.parse(t);
+      const r = localStorage.getItem('glowdo_reminders_v2');
+      if (r) { reminders = JSON.parse(r); 
+        // ensure each has triggered flag
+        reminders = reminders.map(rem => ({ ...rem, triggered: rem.triggered || false }));
+        // find max id
+        reminders.forEach(r => { if (r.id > reminderIdCounter) reminderIdCounter = r.id; });
+      }
+      const name = localStorage.getItem('glowdo_username_v2');
+      if (name) userNameSpan.textContent = name;
+    }
+
+    // quotes
+    const quotes = [
+      "“Start where you are. Use what you have.”",
+      "“Do what you can, with what you have.”",
+      "“Small steps lead to big results.”",
+      "“Believe you can and you’re halfway.”",
+      "“Begin with the end in mind.”",
+      "“Progress, not perfection.”",
+      "“Make today matter.”"
+    ];
+    function setRandomQuote() { quoteSpan.textContent = quotes[Math.floor(Math.random() * quotes.length)]; }
+
+    // ----- render tasks -----
+    function renderAll() {
+      sections.forEach(sec => renderSection(sec));
+      updateProgressAll();
+      renderReminders();
+      saveToStorage();
+      checkAllDone();
+    }
+    function renderSection(section) {
+      const list = lists[section];
+      if (!list) return;
+      const taskArr = tasks[section] || [];
+      list.innerHTML = '';
+      taskArr.forEach((task, index) => {
+        const li = document.createElement('li');
+        li.className = 'task-item' + (task.done ? ' completed' : '');
+        const cb = document.createElement('input');
+        cb.type = 'checkbox';
+        cb.checked = task.done || false;
+        cb.addEventListener('change', () => {
+          tasks[section][index].done = cb.checked;
+          renderAll();
+        });
+        const span = document.createElement('span');
+        span.className = 'task-text';
+        span.textContent = task.text;
+        const actions = document.createElement('div');
+        actions.className = 'task-actions';
+        const editBtn = document.createElement('button');
+        editBtn.className = 'edit-btn';
+        editBtn.innerHTML = '<i class="fas fa-pen"></i>';
+        editBtn.addEventListener('click', () => {
+          const newText = prompt('Edit task:', task.text);
+          if (newText && newText.trim() !== '') {
+            tasks[section][index].text = newText.trim();
+            renderAll();
+          }
+        });
+        const delBtn = document.createElement('button');
+        delBtn.className = 'delete-btn';
+        delBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        delBtn.addEventListener('click', () => {
+          tasks[section].splice(index, 1);
+          renderAll();
+        });
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+        li.appendChild(cb);
+        li.appendChild(span);
+        li.appendChild(actions);
+        list.appendChild(li);
+      });
+    }
+    function updateProgressAll() {
+      sections.forEach(sec => {
+        const arr = tasks[sec] || [];
+        const total = arr.length;
+        const done = arr.filter(t => t.done).length;
+        const el = progress[sec];
+        if (el) {
+          if (total === 0) el.textContent = '✨ 0 tasks';
+          else if (done === total) el.innerHTML = '<span class="pop-complete"><i class="fas fa-check"></i> all done!</span>';
+          else el.textContent = `✓ ${done}/${total}`;
+        }
+      });
+    }
+    function checkAllDone() {
+      let allDone = true; let total = 0;
+      sections.forEach(sec => { const arr = tasks[sec] || []; total += arr.length; arr.forEach(t => { if (!t.done) allDone = false; }); });
+      if (total > 0 && allDone) {
+        const badge = document.createElement('div');
+        badge.className = 'celebration-badge';
+        badge.innerHTML = '🎉 All tasks completed! ✨';
+        document.body.appendChild(badge);
+        setTimeout(() => badge.remove(), 4500);
+      }
+    }
+
+    // ----- add task -----
+    function addTask(section) {
+      const input = inputs[section];
+      if (!input) return;
+      const text = input.value.trim();
+      if (text === '') return;
+      if (!tasks[section]) tasks[section] = [];
+      tasks[section].push({ text, done: false });
+      input.value = '';
+      renderAll();
+    }
+
+    // ----- REMINDERS (multiple) -----
+    function renderReminders() {
+      reminderContainer.innerHTML = '';
+      if (reminders.length === 0) {
+        const msg = document.createElement('div');
+        msg.className = 'no-reminder';
+        msg.textContent = '📭 No reminders yet. Add one above.';
+        reminderContainer.appendChild(msg);
+        return;
+      }
+      // sort by time (soonest first)
+      const sorted = [...reminders].sort((a,b) => a.time - b.time);
+      sorted.forEach(rem => {
+        const card = document.createElement('div');
+        card.className = 'reminder-card' + (rem.triggered ? ' triggered' : '');
+        // info
+        const info = document.createElement('div');
+        info.className = 'rem-info';
+        const textSpan = document.createElement('span');
+        textSpan.className = 'rem-text';
+        textSpan.textContent = rem.text;
+        const timeSpan = document.createElement('span');
+        timeSpan.className = 'rem-time';
+        const d = new Date(rem.time);
+        timeSpan.textContent = d.toLocaleString();
+        const statusSpan = document.createElement('span');
+        statusSpan.className = 'rem-status';
+        statusSpan.textContent = rem.triggered ? '🔔 done' : '⏳ pending';
+        info.appendChild(textSpan);
+        info.appendChild(timeSpan);
+        info.appendChild(statusSpan);
+        // actions
+        const actions = document.createElement('div');
+        actions.className = 'rem-actions';
+        const editBtn = document.createElement('button');
+        editBtn.className = 'rem-edit';
+        editBtn.innerHTML = '<i class="fas fa-pen"></i>';
+        editBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const newText = prompt('Edit reminder text:', rem.text);
+          if (newText && newText.trim() !== '') {
+            const idx = reminders.findIndex(r => r.id === rem.id);
+            if (idx !== -1) { reminders[idx].text = newText.trim(); renderAll(); }
+          }
+        });
+        const delBtn = document.createElement('button');
+        delBtn.className = 'rem-delete';
+        delBtn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          reminders = reminders.filter(r => r.id !== rem.id);
+          renderAll();
+        });
+        actions.appendChild(editBtn);
+        actions.appendChild(delBtn);
+        card.appendChild(info);
+        card.appendChild(actions);
+        reminderContainer.appendChild(card);
+      });
+    }
+
+    function addReminder() {
+      const text = document.getElementById('reminderText').value.trim();
+      const dateVal = document.getElementById('reminderDateTime').value;
+      if (!text || !dateVal) { alert('Please enter reminder text and date/time.'); return; }
+      const time = new Date(dateVal).getTime();
+      if (isNaN(time) || time < Date.now()) { alert('Please set a future date/time.'); return; }
+      reminderIdCounter++;
+      reminders.push({ id: reminderIdCounter, text, time, triggered: false });
+      document.getElementById('reminderText').value = '';
+      document.getElementById('reminderDateTime').value = '';
+      renderAll();
+      // start interval if needed
+      if (reminderInterval) clearInterval(reminderInterval);
+      reminderInterval = setInterval(checkReminders, 1000);
+    }
+
+    function checkReminders() {
+      let anyChanged = false;
+      const now = Date.now();
+      reminders.forEach(rem => {
+        if (!rem.triggered && rem.time <= now) {
+          rem.triggered = true;
+          anyChanged = true;
+          // ring sound + alert with message
+          playRingSound();
+          const msg = `⏰ REMINDER: ${rem.text}`;
+          alert(msg);
+          // also show pop on screen
+          const pop = document.createElement('div');
+          pop.style.position = 'fixed';
+          pop.style.top = '20%';
+          pop.style.left = '50%';
+          pop.style.transform = 'translate(-50%,-50%)';
+          pop.style.background = '#ca3e6b';
+          pop.style.color = 'white';
+          pop.style.padding = '1rem 2.5rem';
+          pop.style.borderRadius = '80px';
+          pop.style.fontWeight = '700';
+          pop.style.boxShadow = '0 20px 40px rgba(0,0,0,0.3)';
+          pop.style.zIndex = '9999';
+          pop.innerHTML = '🔔 ' + rem.text;
+          document.body.appendChild(pop);
+          setTimeout(() => pop.remove(), 6000);
+        }
+      });
+      if (anyChanged) {
+        renderAll();
+        saveToStorage();
+      }
+    }
+
+    // ring sound (web audio oscillator + beep)
+    function playRingSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 880; // A5
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 1.2);
+        // second beep
+        setTimeout(() => {
+          const osc2 = audioCtx.createOscillator();
+          const gain2 = audioCtx.createGain();
+          osc2.type = 'sine';
+          osc2.frequency.value = 1100;
+          gain2.gain.setValueAtTime(0.25, audioCtx.currentTime);
+          gain2.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.8);
+          osc2.connect(gain2);
+          gain2.connect(audioCtx.destination);
+          osc2.start();
+          osc2.stop(audioCtx.currentTime + 0.8);
+        }, 400);
+      } catch (e) { console.warn('audio not available'); }
+    }
+
+    function testRing() {
+      playRingSound();
+      alert('🔔 Test ring sound played.');
+    }
+
+    // ----- event listeners -----
+    document.querySelectorAll('.add-task-form button').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const section = e.currentTarget.dataset.section;
+        addTask(section);
+      });
+    });
+    Object.keys(inputs).forEach(sec => {
+      inputs[sec].addEventListener('keypress', (e) => { if (e.key === 'Enter') addTask(sec); });
+    });
+
+    // tabs visual
+    document.querySelectorAll('.section-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.section-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    document.getElementById('addReminderBtn').addEventListener('click', addReminder);
+    document.getElementById('testRingBtn').addEventListener('click', testRing);
+    // allow enter on reminder text
+    document.getElementById('reminderText').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') addReminder();
+    });
+
+    // username edit
+    userNameSpan.addEventListener('dblclick', function() {
+      const newName = prompt('Enter your name:', this.textContent);
+      if (newName && newName.trim() !== '') {
+        this.textContent = newName.trim();
+        saveToStorage();
+      }
+    });
+
+    // init
+    loadFromStorage();
+    setRandomQuote();
+    renderAll();
+    // start reminder checker
+    if (reminderInterval) clearInterval(reminderInterval);
+    reminderInterval = setInterval(checkReminders, 1000);
+    // also check on load for any reminders that should trigger
+    setTimeout(checkReminders, 500);
+  })();
+</script>
+</body>
+</html>
